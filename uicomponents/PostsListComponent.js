@@ -17,7 +17,7 @@ class PostsListComponent {
             listItem.appendChild(postTitle)
             listItem.appendChild(postBody)
             //listItem.setAttribute('data-target', oItem.id);
-            listItem.addEventListener('click', function() {fnPostClickCallback(oItem.id)});
+            listItem.addEventListener('click', function() {fnPostClickCallback(oItem)});
 
             //listItem.innerText = oItem.title;
             //listItem.innerText = oItem.body;

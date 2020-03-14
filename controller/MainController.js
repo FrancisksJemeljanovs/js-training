@@ -18,7 +18,7 @@ class MainController {
             this.openAlbumsPage();
         }.bind(this));
         document.getElementById("toDoList").addEventListener('click', function() {
-            this.oModel.getPostsInPage();
+            this.openBatchPostsPage();
         }.bind(this));
     }
 
@@ -32,8 +32,28 @@ class MainController {
     openPostsPage() {
         // check if 'Posts' exists in oData model
         //pieprasiit kuru lapu
-        this.oRESTApiCommunicationHandler.getPosts(this.oModel.setProperty.bind(this.oModel, 'posts'), 1, 15);
+        this.oRESTApiCommunicationHandler.getPosts(this.oModel.setProperty.bind(this.oModel, 'posts'));
         this.oModel.oData.ui.page = 'posts'
+    }
+
+    openBatchPostsPage() {
+        // check if 'Posts' exists in oData model
+
+        var postsStart = this.oModel.oData.ui.postsPage * this.oModel.oData.ui.postLimit - this.oModel.oData.ui.postLimit
+        var postsLimit = this.oModel.oData.ui.postLimit
+        console.log(postsStart, postsLimit)
+
+        var listOfPosts = this.oModel.getPostsInPage2()
+        if (listOfPosts === undefined) {
+            console.log('calling posts fetching handler')
+            this.oRESTApiCommunicationHandler.getBatchOfPosts(postsStart, postsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'posts2'));
+            console.log('trying to ask posts from model again')
+            listOfPosts = this.oModel.getPostsInPage2()
+            console.log('model gave me ' + listOfPosts)
+            this.oModel.oData.ui.page = 'posts2'
+        }
+        
+        //this.oModel.oData.ui.page = 'posts2'
     }
 
     openAlbumsPage() {
@@ -46,8 +66,17 @@ class MainController {
         this.oModel.oData.ui.page = 'photos'
     }
 
-    openSelectedPostPage(nPostId) {
+    openSelectedPostPage(oPostObject) {
+        this.oModel.oData.ui.selectedPost = oPostObject;
+        //console.log(this.oModel.getUserInfoFromPost(oPostObject))
+        //console.log(oPostObject)
+        
+        this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost.id, this.oModel.oData.ui.commentsPage, this.oModel.oData.ui.commentsLimit, this.oModel.setProperty.bind(this.oModel, 'comments'));
+        //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost);
+        console.log(this.oModel.oData.comments)
 
+        //this.oModel.oData.ui.page = 'selected-post';
+        this.updatePage()
     }
 
 
@@ -58,15 +87,11 @@ class MainController {
         }.bind(this), false);
     }
 
-    _onPostClick(postId) {
-        this.oModel.oData.ui.selectedPost = postId;
-        this.oModel.oData.ui.page = 'selected-post';
+    _onPostClick(postObject) {
+        this.oModel.oData.ui.commentsPage = 1;
+        this.openSelectedPostPage(postObject)
 
-        console.log(postId)
-        console.log(typeof(postId))
-        this.updatePage()
         
-        //this.openSelectedPostPage(postId)
     }
 
     _onAlbumOpen(e) {
@@ -96,6 +121,47 @@ class MainController {
     }
 
     updatePage() {
+        //console.log('UpdatePage() was called')
+        if (this.oModel.oData.ui.page === 'posts2') {
+            //console.log('updatePage == posts2 was  triggered!')
+            this._$container.innerHTML = ''
+            var oList = new PostsListComponent();
+            //this._$container.appendChild(oList.renderList(this.oModel.getProperty('posts')));
+            this._$container.appendChild(oList.renderList(this.oModel.getPostsInPage2(), this._onPostClick.bind(this)));
+
+            var buttonPrevious = document.createElement("button");
+            var buttonNext = document.createElement("button");
+            var currentPageDisplayLabel = document.createElement("label");
+
+            currentPageDisplayLabel.innerHTML = `Current page: ${this.oModel.oData.ui.postsPage}`;
+            buttonPrevious.innerHTML = 'Previous';
+
+            buttonNext.innerHTML = 'Next';
+            if (this.oModel.oData.ui.postsPage === 1) {
+                buttonPrevious.disabled = true
+            }
+            if (this.oModel.oData.ui.postsPage === 7) {
+                buttonNext.disabled = true
+            }
+
+            buttonPrevious.onclick = function() {
+                this.oModel.oData.ui.postsPage -= 1;
+                //this.updatePage();
+                this.openBatchPostsPage;
+            }.bind(this);
+
+            buttonNext.onclick = function() {
+                this.oModel.oData.ui.postsPage += 1;
+                //this.updatePage();
+                this.openBatchPostsPage;
+            }.bind(this);
+
+            this._$container.appendChild(buttonPrevious);
+            this._$container.appendChild(buttonNext);
+            this._$container.appendChild(currentPageDisplayLabel);
+            
+        }
+
         //if (this._page === 'users') {
         if (this.oModel.oData.ui.page === 'users') {
             this._$container.innerHTML = '';
@@ -156,7 +222,7 @@ class MainController {
 
         if (this.oModel.oData.ui.page === 'selected-post') {
             this._$container.innerHTML = ''
-            this.oModel.getSelectedPostData()
+
 
         }
         // get data from model

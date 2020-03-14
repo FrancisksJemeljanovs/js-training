@@ -21,9 +21,20 @@ class RESTApiCommunicationHandler {
         })
     }
 
-    getComments(fnCallback) {
-        fetch('https://jsonplaceholder.typicode.com/comments').then(function(res) {
+    getBatchOfPosts(nStart, nLimit, fnCallback) {
+        console.log(`fetching posts from ${nStart} to ${nStart + nLimit}`)
+        fetch(`https://jsonplaceholder.typicode.com/posts?_start=${nStart}&_limit=${nLimit}`).then(function(res) {
             res.json().then(function(data) {
+                fnCallback(data);
+            })
+        })
+    }
+
+    getCommentsForPost(nPostId, nPostStart, nPostAmount, fnCallback) {
+        //console.log(nPostId)
+        fetch(`https://jsonplaceholder.typicode.com/posts/${nPostId}/comments?_start=${nPostStart}&_limit=${nPostAmount}`).then(function(res) {
+            res.json().then(function(data) {
+                //console.log(data)
                 fnCallback(data);
             })
         })
@@ -37,8 +48,8 @@ class RESTApiCommunicationHandler {
         })
     }
 
-    getPhotos(iAlbumId, fnCallback) {
-        fetch(`https://jsonplaceholder.typicode.com/photos?albumId=${iAlbumId}`).then(function(res) {
+    getPhotos(nAlbumId, fnCallback) {
+        fetch(`https://jsonplaceholder.typicode.com/photos?albumId=${nAlbumId}`).then(function(res) {
             res.json().then(function(data) {
                 fnCallback(data);
             })

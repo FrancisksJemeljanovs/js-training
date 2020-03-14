@@ -5,8 +5,10 @@ class Model {
                 page: 'users',
                 usersPageSortOrderAsc: {},
                 postsPage: 1,
-                postLimit: '15',
-                selectedPost: null
+                postLimit: 15,
+                selectedPost: null,
+                commentsPage: 1,
+                commentsLimit: 3
             }
         }
     }
@@ -21,7 +23,27 @@ class Model {
         //console.log('users property was set to oData object')
 
         var event = new Event('model_updated');
+        // Dispatch the event.
+        document.dispatchEvent(event);
+    }
 
+    addDataToProperty(sPath, oValue) {
+        if (this.oData[sPath] === undefined) {
+            this.oData[sPath] = oValue
+            console.log('posts object was created and populated with first batch of posts')
+        }
+        if (!(oValue in this.oData[sPath])) {
+            //.log(typeof(this.oData[sPath]))
+            
+            //this.oData[sPath].push(oValue)
+
+            //console.log('new posts added to existing posts')
+        }
+        //this.oData[sPath].push(oValue)
+        //console.log(this.oData[sPath])
+        //Object.assign(this.oData.sPath, oValue)
+
+        var event = new Event('model_updated');
         // Dispatch the event.
         document.dispatchEvent(event);
     }
@@ -32,14 +54,6 @@ class Model {
 
     getProperty(sPath) {
         return this.oData[sPath];
-    }
-
-    getPostsInPage() {
-        //console.log(this.oData.ui.postsPage)
-        var postIndexStart = this.oData.ui.postsPage * this.oData.ui.postLimit - this.oData.ui.postLimit
-        var postIndexEnd = this.oData.ui.postsPage * this.oData.ui.postLimit
-
-        return Object.entries(this.oData.posts).slice(postIndexStart,postIndexEnd).map(elems => elems[1]);
     }
 
     getSmarterUsersCustomData(sPath, sSelectedColumnName) {
@@ -97,9 +111,43 @@ class Model {
         //redux reaktaa
     }
 
-    getSelectedPostData() {
-        console.log(this.oData.posts[this.oData.ui.selectedPost - 1])
-        return this.oData.posts[this.oData.ui.selectedPost - 1]
+    getPostsInPage() {
+        //console.log(this.oData.ui.postsPage)
+        var postIndexStart = this.oData.ui.postsPage * this.oData.ui.postLimit - this.oData.ui.postLimit
+        var postIndexEnd = this.oData.ui.postsPage * this.oData.ui.postLimit
+
+        return Object.entries(this.oData.posts).slice(postIndexStart,postIndexEnd).map(elems => elems[1]);
+    }
+
+    getPostsInPage2() {
+        console.log(`current posts page is ${this.oData.ui.postsPage}`)
+        
+        //console.log(Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1]))
+
+        var postIndexStart = this.oData.ui.postsPage * this.oData.ui.postLimit - this.oData.ui.postLimit
+        var postIndexEnd = this.oData.ui.postsPage * this.oData.ui.postLimit - 1
+        console.log(`i was asked for posts from ${postIndexStart} to ${postIndexEnd}`)
+        //console.log(this.oData.posts2)
+        if (!(this.oData.posts2 === undefined)) {
+            console.log(`asking for post with index ${postIndexStart} from posts2`)
+            console.log(this.oData.posts2[postIndexStart])
+            if (this.oData.posts2[postIndexStart] === undefined) {
+                console.log('i dont these posts in model')
+                return undefined
+            }
+            //console.log('getPostsInPage2 returned some posts from model')
+            //console.log(Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1]))
+            //console.log(`I am returning ${Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1])}`)
+            return Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1]);
+        } else {
+            console.log('getPostsInPage2 returned undefined')
+            return undefined
+        }
+        
+    }
+
+    getUserInfoFromPost() {
+        return this.oData.users[this.oData.ui.selectedPost.userId - 1]
     }
 
     dynamicSort(sProperty, bSortOrderAsc) {
