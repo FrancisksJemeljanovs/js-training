@@ -1,7 +1,7 @@
 class PostInfoComponent {
     constructor() {}
 
-    renderPostInfo(oAuthor, oPost, aComments) {
+    renderPostInfo(oAuthor, oPost, oComments) {
         this.oDomRef = document.createElement("div");
 
         let authorName = document.createElement("p");
@@ -12,6 +12,8 @@ class PostInfoComponent {
         postBody.innerHTML = `<strong>Post: </strong>${oPost.body}`;
 
         this.oDomRef.appendChild(authorName)
+        this.oDomRef.appendChild(postTitle)
+        this.oDomRef.appendChild(postBody)
         
         return this.oDomRef
     }

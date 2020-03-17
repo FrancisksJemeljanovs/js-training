@@ -30,55 +30,56 @@ class MainController {
     }
 
     openPostsPage() {
-        // check if 'Posts' exists in oData model
-        //pieprasiit kuru lapu
-        this.oRESTApiCommunicationHandler.getPosts(this.oModel.setProperty.bind(this.oModel, 'posts'));
-        this.oModel.oData.ui.page = 'posts'
+
+        let postsStart = this.oModel.oData.ui.postsPage * this.oModel.oData.ui.postLimit - this.oModel.oData.ui.postLimit
+        let postsLimit = this.oModel.oData.ui.postLimit
+        //console.log(postsStart, postsLimit)
+        if (this.oModel.checkIfPostsAvailable()) {
+            this.oModel.oData.ui.page = 'posts'
+            this.updatePage()
+        } else {
+            this.oRESTApiCommunicationHandler.getBatchOfPosts(postsStart, postsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'posts'));
+            this.oModel.oData.ui.page = 'posts'
+            this.updatePage()
+        }
     }
 
-    openBatchPostsPage() {
-        // check if 'Posts' exists in oData model
+    openSelectedPostPage() {
+        let nCommentsStart = this.oModel.oData.ui.commentsPage * this.oModel.oData.ui.commentsLimit - this.oModel.oData.ui.commentsLimit
+        let nCommentsLimit = this.oModel.oData.ui.commentsLimit
+        console.log('comment start and limit')
+        console.log(nCommentsStart, nCommentsLimit)
+        console.log(this.oModel.GetPostComments())
 
-        var postsStart = this.oModel.oData.ui.postsPage * this.oModel.oData.ui.postLimit - this.oModel.oData.ui.postLimit
-        var postsLimit = this.oModel.oData.ui.postLimit
-        console.log(postsStart, postsLimit)
-
-        var listOfPosts = this.oModel.getPostsInPage2()
-        if (listOfPosts === undefined) {
-            console.log('calling posts fetching handler')
-            this.oRESTApiCommunicationHandler.getBatchOfPosts(postsStart, postsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'posts2'));
-            console.log('trying to ask posts from model again')
-            listOfPosts = this.oModel.getPostsInPage2()
-            console.log('model gave me ' + listOfPosts)
-            this.oModel.oData.ui.page = 'posts2'
+        if (this.oModel.GetPostComments() === undefined) {
+            this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'comments'));
+            this.oModel.oData.ui.page = 'selected-post';
+            this.updatePage()
+        } else {
+            this.oModel.oData.ui.page = 'selected-post';
+            this.updatePage()
         }
-        
-        //this.oModel.oData.ui.page = 'posts2'
+
+        //this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'comments'));
+        //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost.id, this.oModel.addDataToProperty.bind(this.oModel, 'comments'))
+
+        //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost);
+        //console.log(this.oModel.oData.comments)
+
+        //this.oModel.oData.ui.page = 'selected-post';
+        //this.updatePage()
     }
 
     openAlbumsPage() {
         this.oRESTApiCommunicationHandler.getAlbums(this.oModel.setProperty.bind(this.oModel, 'albums'));
         this.oModel.oData.ui.page = 'albums'
+        console.log('page was set to album')
     }
 
     openPhotosPage(nAlbumId) {
         this.oRESTApiCommunicationHandler.getPhotos(nAlbumId, this.oModel.setProperty.bind(this.oModel, 'photos'));
         this.oModel.oData.ui.page = 'photos'
     }
-
-    openSelectedPostPage(oPostObject) {
-        this.oModel.oData.ui.selectedPost = oPostObject;
-        //console.log(this.oModel.getUserInfoFromPost(oPostObject))
-        //console.log(oPostObject)
-        
-        this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost.id, this.oModel.oData.ui.commentsPage, this.oModel.oData.ui.commentsLimit, this.oModel.setProperty.bind(this.oModel, 'comments'));
-        //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost);
-        console.log(this.oModel.oData.comments)
-
-        //this.oModel.oData.ui.page = 'selected-post';
-        this.updatePage()
-    }
-
 
     attachModelUpdateListener() {
         // Listen for the event.
@@ -87,10 +88,11 @@ class MainController {
         }.bind(this), false);
     }
 
-    _onPostClick(postObject) {
+    _onPostClick(oPostObject) {
         this.oModel.oData.ui.commentsPage = 1;
-        this.openSelectedPostPage(postObject)
-
+        this.oModel.oData.ui.selectedPost = oPostObject;
+        //console.log(this.oModel.oData.ui.selectedPost)
+        this.openSelectedPostPage()
         
     }
 
@@ -115,66 +117,20 @@ class MainController {
         this._$container.innerHTML = '';
         var oList = new TableComponent();
         this._$container.appendChild(oList.renderTable(this.oModel.getSmarterUsersCustomData('users', sSelectedColumnName), this._onColumnNameClick.bind(this)));
-
-
-
     }
 
     updatePage() {
-        //console.log('UpdatePage() was called')
-        if (this.oModel.oData.ui.page === 'posts2') {
-            //console.log('updatePage == posts2 was  triggered!')
-            this._$container.innerHTML = ''
-            var oList = new PostsListComponent();
-            //this._$container.appendChild(oList.renderList(this.oModel.getProperty('posts')));
-            this._$container.appendChild(oList.renderList(this.oModel.getPostsInPage2(), this._onPostClick.bind(this)));
-
-            var buttonPrevious = document.createElement("button");
-            var buttonNext = document.createElement("button");
-            var currentPageDisplayLabel = document.createElement("label");
-
-            currentPageDisplayLabel.innerHTML = `Current page: ${this.oModel.oData.ui.postsPage}`;
-            buttonPrevious.innerHTML = 'Previous';
-
-            buttonNext.innerHTML = 'Next';
-            if (this.oModel.oData.ui.postsPage === 1) {
-                buttonPrevious.disabled = true
-            }
-            if (this.oModel.oData.ui.postsPage === 7) {
-                buttonNext.disabled = true
-            }
-
-            buttonPrevious.onclick = function() {
-                this.oModel.oData.ui.postsPage -= 1;
-                //this.updatePage();
-                this.openBatchPostsPage;
-            }.bind(this);
-
-            buttonNext.onclick = function() {
-                this.oModel.oData.ui.postsPage += 1;
-                //this.updatePage();
-                this.openBatchPostsPage;
-            }.bind(this);
-
-            this._$container.appendChild(buttonPrevious);
-            this._$container.appendChild(buttonNext);
-            this._$container.appendChild(currentPageDisplayLabel);
-            
-        }
-
-        //if (this._page === 'users') {
         if (this.oModel.oData.ui.page === 'users') {
             this._$container.innerHTML = '';
             //var oList = new ListComponent();
-            var oList = new TableComponent();
+            var oTable = new TableComponent();
             //this._$container.appendChild(oList.renderTable(this.oModel.getProperty('users')));
-            this._$container.appendChild(oList.renderTable(this.oModel.getSmarterUsersCustomData('users'), this._onColumnNameClick.bind(this)));
+            this._$container.appendChild(oTable.renderTable(this.oModel.getSmarterUsersCustomData('users'), this._onColumnNameClick.bind(this)));
         }
-        //if (this._page === 'posts') {
+
         if (this.oModel.oData.ui.page === 'posts') {
             this._$container.innerHTML = ''
             var oList = new PostsListComponent();
-            //this._$container.appendChild(oList.renderList(this.oModel.getProperty('posts')));
             this._$container.appendChild(oList.renderList(this.oModel.getPostsInPage(), this._onPostClick.bind(this)));
 
             var buttonPrevious = document.createElement("button");
@@ -183,8 +139,8 @@ class MainController {
 
             currentPageDisplayLabel.innerHTML = `Current page: ${this.oModel.oData.ui.postsPage}`;
             buttonPrevious.innerHTML = 'Previous';
-
             buttonNext.innerHTML = 'Next';
+
             if (this.oModel.oData.ui.postsPage === 1) {
                 buttonPrevious.disabled = true
             }
@@ -194,26 +150,25 @@ class MainController {
 
             buttonPrevious.onclick = function() {
                 this.oModel.oData.ui.postsPage -= 1;
-                this.updatePage();
+                this.openPostsPage();
             }.bind(this);
 
             buttonNext.onclick = function() {
                 this.oModel.oData.ui.postsPage += 1;
-                this.updatePage();
+                this.openPostsPage();
             }.bind(this);
 
             this._$container.appendChild(buttonPrevious);
             this._$container.appendChild(buttonNext);
             this._$container.appendChild(currentPageDisplayLabel);
-            
         }
-        //if (this._page === 'albums') {
+
         if (this.oModel.oData.ui.page === 'albums') {
             this._$container.innerHTML = ''
             var oList = new AlbumsComponent();
             this._$container.appendChild(oList.renderList(this.oModel.getProperty('albums'), this._onAlbumOpen.bind(this)));
         }
-        //if (this._page === 'photos') {
+
         if (this.oModel.oData.ui.page === 'photos') {
             this._$container.innerHTML = ''
             var oList = new PhotosComponent();
@@ -222,9 +177,29 @@ class MainController {
 
         if (this.oModel.oData.ui.page === 'selected-post') {
             this._$container.innerHTML = ''
+            var oPost = new PostInfoComponent();
+            var oAuthor = this.oModel.getUserInfoFromPost(this.oModel.oData.selectedPost)
+            var oCommentsList = new ListComponent()
+            //console.log(oAuthor)
+            //console.log(this.oModel.oData.ui.selectedPost)
+            var comments = this.oModel.GetPostComments()
+            //console.log(comments.map(a => a.body))
+            this._$container.appendChild(oPost.renderPostInfo(oAuthor, this.oModel.oData.ui.selectedPost))
+            //this._$container.appendChild(oCommentsList.renderList(comments.map(a => a.body)))
+            this._$container.appendChild(oCommentsList.renderList(comments))
+
+            var buttonMoreComments = document.createElement("button");
+
+            buttonMoreComments.innerHTML = 'Load more comments';
 
 
-        }
+            buttonMoreComments.onclick = function() {
+                this.oModel.oData.ui.commentsPage += 1;
+                //console.log('comments page was set to 2')
+                this.openSelectedPostPage();
+            }.bind(this);
+            this._$container.appendChild(buttonMoreComments)
+        }   
         // get data from model
         // create instance of appropriate ui component
         // put ui component html dom to app so page is rendered with correct data and correct ui component

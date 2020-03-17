@@ -30,18 +30,18 @@ class Model {
     addDataToProperty(sPath, oValue) {
         if (this.oData[sPath] === undefined) {
             this.oData[sPath] = oValue
-            console.log('posts object was created and populated with first batch of posts')
-        }
-        if (!(oValue in this.oData[sPath])) {
-            //.log(typeof(this.oData[sPath]))
-            
-            //this.oData[sPath].push(oValue)
+            console.log(`${sPath} property was created and populated with first batch of posts`)
 
-            //console.log('new posts added to existing posts')
+        } else {
+            for (let post in oValue) {
+                if (!(this.oData[sPath].some(e => e.id === oValue[post].id))) {
+                    //console.log('post was added!')
+                    this.oData[sPath].push(oValue[post])
+                } else {
+                    //console.log('this post was already in model')
+                }
+            }
         }
-        //this.oData[sPath].push(oValue)
-        //console.log(this.oData[sPath])
-        //Object.assign(this.oData.sPath, oValue)
 
         var event = new Event('model_updated');
         // Dispatch the event.
@@ -119,31 +119,37 @@ class Model {
         return Object.entries(this.oData.posts).slice(postIndexStart,postIndexEnd).map(elems => elems[1]);
     }
 
-    getPostsInPage2() {
-        console.log(`current posts page is ${this.oData.ui.postsPage}`)
-        
-        //console.log(Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1]))
-
-        var postIndexStart = this.oData.ui.postsPage * this.oData.ui.postLimit - this.oData.ui.postLimit
-        var postIndexEnd = this.oData.ui.postsPage * this.oData.ui.postLimit - 1
-        console.log(`i was asked for posts from ${postIndexStart} to ${postIndexEnd}`)
-        //console.log(this.oData.posts2)
-        if (!(this.oData.posts2 === undefined)) {
-            console.log(`asking for post with index ${postIndexStart} from posts2`)
-            console.log(this.oData.posts2[postIndexStart])
-            if (this.oData.posts2[postIndexStart] === undefined) {
-                console.log('i dont these posts in model')
-                return undefined
+    checkIfPostsAvailable() {
+        //var postIndexStart = this.oData.ui.postsPage * this.oData.ui.postLimit - this.oData.ui.postLimit
+        var lastPostInPage = this.oData.ui.postsPage * this.oData.ui.postLimit
+        //console.log(this.oData.posts[postIndexStart])
+        if (this.oData.posts !== undefined) {
+            if (this.oData.posts[lastPostInPage - 1] === undefined) {
+                //console.log('no posts available')
+                return false
+            } else {
+                //console.log(this.oData.posts[postIndexEnd - 1])
+                return true
             }
-            //console.log('getPostsInPage2 returned some posts from model')
-            //console.log(Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1]))
-            //console.log(`I am returning ${Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1])}`)
-            return Object.entries(this.oData.posts2).slice(postIndexStart,postIndexEnd).map(elems => elems[1]);
         } else {
-            console.log('getPostsInPage2 returned undefined')
+            return false
+        }
+    }
+
+    GetPostComments() {
+        var startCommentIndex = this.oData.ui.commentsPage * this.oData.ui.commentsLimit - this.oData.ui.commentsLimit
+        var endCommentIndex = this.oData.ui.commentsPage * this.oData.ui.commentsLimit
+        console.log('start and end comment indices are:')
+        console.log(startCommentIndex, endCommentIndex)
+        //console.log(this.oData.ui.selectedPost.id)
+        //console.log(this.oData.comments)
+        //console.log(this.oData.comments.filter((comment) => comment.postId == this.oData.ui.selectedPost.id))
+        if (this.oData.comments !== undefined) {
+
+            return this.oData.comments.filter((comment) => comment.postId == this.oData.ui.selectedPost.id)
+        } else {
             return undefined
         }
-        
     }
 
     getUserInfoFromPost() {

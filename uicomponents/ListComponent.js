@@ -6,7 +6,7 @@ class ListComponent {
         this.oDomRef = document.createElement("ul");
         aItems.forEach(function(oItem) {
             listItem = document.createElement("li");
-            listItem.innerText = oItem.id;
+            listItem.innerText = oItem.id + ' ' + oItem.body;
             this.oDomRef.appendChild(listItem);
         }.bind(this));
         return this.oDomRef;
