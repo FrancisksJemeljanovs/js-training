@@ -56,6 +56,10 @@ class Model {
         return this.oData[sPath];
     }
 
+    getTodos(nUserId) {
+        return this.oData.todos.filter((todo) => todo.userId === nUserId)
+    }
+
     getSmarterUsersCustomData(sPath, sSelectedColumnName) {
         let data = this.oData[sPath];
         let newData = []

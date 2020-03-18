@@ -2,7 +2,12 @@ class RESTApiCommunicationHandler {
     constructor() {}
 
     getUsers(fnCallback) {
+        console.log('fetching users')
         fetch('https://jsonplaceholder.typicode.com/users').then(function(res) {
+            if (!res.ok) {
+                throw new Error('Network response was not ok!')
+            }
+            console.log(`response status was ${res.status}`)
             res.json().then(function(data) {
                 fnCallback(data);
                 
@@ -14,6 +19,7 @@ class RESTApiCommunicationHandler {
     }
 
     getPosts(fnCallback) {
+        console.log('fetching posts')
         fetch('https://jsonplaceholder.typicode.com/posts').then(function(res) {
             res.json().then(function(data) {
                 fnCallback(data);
@@ -69,6 +75,7 @@ class RESTApiCommunicationHandler {
     }
 
     getAlbums(fnCallback) {
+        console.log('fetching albums')
         fetch('https://jsonplaceholder.typicode.com/albums').then(function(res) {
             res.json().then(function(data) {
                 fnCallback(data);
@@ -80,6 +87,7 @@ class RESTApiCommunicationHandler {
     }
 
     getPhotos(nAlbumId, fnCallback) {
+        console.log(`fetching photos for ${nAlbumId} album`)
         fetch(`https://jsonplaceholder.typicode.com/photos?albumId=${nAlbumId}`).then(function(res) {
             res.json().then(function(data) {
                 fnCallback(data);
@@ -90,4 +98,84 @@ class RESTApiCommunicationHandler {
         })
     }
 
+    getTodos(fnCallback) {
+        console.log(`fetching todos`)
+        fetch('https://jsonplaceholder.typicode.com/todos').then(function(res) {
+            res.json().then(function(data) {
+                //console.log(data)
+                fnCallback(data);
+                
+            })
+            .catch( err =>{
+                console.log("ERROR on loading todos data", err)
+            })
+        })
+    }
+
+    updateTodo(oTodo, fnCallback) {
+        console.log(`updating ${oTodo.id} todo`)
+        //console.log(oTodo)
+        fetch(`https://jsonplaceholder.typicode.com/todos/${oTodo.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                completed: oTodo.completed
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            console.log(`status code for updating todo was ${response.status}`)
+            response.json()
+        })
+        .then(json => console.log(json))
+        .catch( err =>{
+            console.log("ERROR on updating status data", err)
+        })
+    }
+
+    deleteTodo(oTodo) {
+
+        console.log(`trying to delete ${oTodo.id} todo`)
+        fetch(`https://jsonplaceholder.typicode.com/todos/${oTodo.id}`, {
+            method: 'DELETE'
+        })
+        .then((response) => {
+            console.log(`Todo delete request response was ${response.status}`)
+            response.json()
+        })
+        .then(json => console.log(json))
+        .catch( err =>{
+            console.log("ERROR on deleting todo data", err)
+        })
+    }
+
+    postTodo() {
+        console.log('postTodo was called')
+        fetch('https://jsonplaceholder.typicode.com/todos', {
+            method: 'POST',
+            body: JSON.stringify({
+                userId: 1,
+                title: "clean room",
+                completed: false
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`failed to send new Todo to server!`)
+            }
+            response.json()
+        })
+        .then(json => console.log(json))
+        .catch( res => {
+            console.log(res)
+        })
+        
+    }
 }

@@ -18,19 +18,36 @@ class MainController {
             this.openAlbumsPage();
         }.bind(this));
         document.getElementById("toDoList").addEventListener('click', function() {
-            this.openBatchPostsPage();
+            this.openTodosPage();
         }.bind(this));
+    }
+
+    openTodosPage() {
+        console.log('todos page opened')
+        this.oModel.oData.ui.page = 'todos'
+        if (this.oModel.oData.todos === undefined) {
+            this.oRESTApiCommunicationHandler.getTodos(this.oModel.setProperty.bind(this.oModel, 'todos'));
+        } else {
+            this.updatePage()
+        }
     }
 
     openUsersPage() {
         //this.oModel.checkDataExists.bind(this.oModel, 'some path')
         //this.oModel.checkDataExists('some path')
-        this.oRESTApiCommunicationHandler.getUsers(this.oModel.setProperty.bind(this.oModel, 'users'));
+        console.log('users page opened')
         this.oModel.oData.ui.page = 'users'
+        if (this.oModel.oData.users === undefined) {
+            this.oRESTApiCommunicationHandler.getUsers(this.oModel.setProperty.bind(this.oModel, 'users'));
+        } else {
+            this.updatePage()
+        }
+        
     }
 
     openPostsPage() {
 
+        console.log('posts page opened')
         let postsStart = this.oModel.oData.ui.postsPage * this.oModel.oData.ui.postLimit - this.oModel.oData.ui.postLimit
         let postsLimit = this.oModel.oData.ui.postLimit
         //console.log(postsStart, postsLimit)
@@ -45,17 +62,20 @@ class MainController {
     }
 
     openSelectedPostPage() {
+        console.log('selected post page opened')
         let nCommentsStart = this.oModel.oData.ui.commentsPage * this.oModel.oData.ui.commentsLimit - this.oModel.oData.ui.commentsLimit
         let nCommentsLimit = this.oModel.oData.ui.commentsLimit
-        console.log('comment start and limit')
-        console.log(nCommentsStart, nCommentsLimit)
-        console.log(this.oModel.GetPostComments())
+        //console.log('comment start and limit')
+        //console.log(nCommentsStart, nCommentsLimit)
+        //console.log(this.oModel.GetPostComments())
+        //console.log(this.oModel.oData.comments)
 
-        if (this.oModel.GetPostComments() === undefined) {
+        if (this.oModel.GetPostComments() === undefined || this.oModel.GetPostComments().length < this.oModel.oData.ui.commentsLimit * this.oModel.oData.ui.commentsPage) {
             this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'comments'));
             this.oModel.oData.ui.page = 'selected-post';
             this.updatePage()
         } else {
+            
             this.oModel.oData.ui.page = 'selected-post';
             this.updatePage()
         }
@@ -71,12 +91,22 @@ class MainController {
     }
 
     openAlbumsPage() {
-        this.oRESTApiCommunicationHandler.getAlbums(this.oModel.setProperty.bind(this.oModel, 'albums'));
+
+        console.log('albums page opened')
         this.oModel.oData.ui.page = 'albums'
-        console.log('page was set to album')
+        if (this.oModel.oData.albums === undefined) {
+            //this.oRESTApiCommunicationHandler.getUsers(this.oModel.setProperty.bind(this.oModel, 'users'));
+            this.oRESTApiCommunicationHandler.getAlbums(this.oModel.setProperty.bind(this.oModel, 'albums'));
+        } else {
+            this.updatePage()
+        }
+
+        //this.oRESTApiCommunicationHandler.getAlbums(this.oModel.setProperty.bind(this.oModel, 'albums'));
     }
 
     openPhotosPage(nAlbumId) {
+
+        console.log('photos page opened')
         this.oRESTApiCommunicationHandler.getPhotos(nAlbumId, this.oModel.setProperty.bind(this.oModel, 'photos'));
         this.oModel.oData.ui.page = 'photos'
     }
@@ -119,7 +149,39 @@ class MainController {
         this._$container.appendChild(oList.renderTable(this.oModel.getSmarterUsersCustomData('users', sSelectedColumnName), this._onColumnNameClick.bind(this)));
     }
 
+    _onTodoCheckboxChange(oTodoObject, bChecked) {
+        this.oModel.oData.todos.find(todo => todo.id === oTodoObject.id).completed = bChecked
+        console.log(`Todo with id ${oTodoObject.id} completion status changed to ${bChecked} in data model`)
+        //this.updatePage()
+        this.oRESTApiCommunicationHandler.updateTodo(oTodoObject)
+        //this.oRESTApiCommunicationHandler.updateTodo2(oTodoObject)
+        this.oRESTApiCommunicationHandler.deleteTodo(oTodoObject)
+        this.oRESTApiCommunicationHandler.postTodo()
+    }
+
+    _onTodoDeleteButtonClick(oTodoObject) {
+        console.log('delete callback was called')
+        console.log(`${oTodoObject.id} needs to be deleted!`)
+    }
+
     updatePage() {
+        if (this.oModel.oData.ui.page === 'todos') {
+            this._$container.innerHTML = '';
+            var oTodosList = new ToDoListComponent();
+
+            //console.log(this.oModel.oData.todos.filter((todo) => todo.userId === 1))
+            for (var i in this.oModel.oData.users) {
+                var userTodos = document.createElement('div')
+                var userLabel = document.createElement('label')
+                userLabel.innerHTML = `Todos for user ${this.oModel.oData.users[i].id}`
+                userTodos.appendChild(userLabel)
+                //console.log(this.oModel.oData.users[i].id)
+                //console.log(this.oModel.oData.todos.filter((todo) => todo.userId === this.oModel.oData.users[i].id))
+                userTodos.appendChild(oTodosList.renderToDoList(this.oModel.getTodos(this.oModel.oData.users[i].id), this._onTodoCheckboxChange.bind(this), this._onTodoDeleteButtonClick.bind(this)));
+                this._$container.appendChild(userTodos)
+            }
+        }
+
         if (this.oModel.oData.ui.page === 'users') {
             this._$container.innerHTML = '';
             //var oList = new ListComponent();
@@ -182,11 +244,11 @@ class MainController {
             var oCommentsList = new ListComponent()
             //console.log(oAuthor)
             //console.log(this.oModel.oData.ui.selectedPost)
-            var comments = this.oModel.GetPostComments()
+            var aComments = this.oModel.GetPostComments()
             //console.log(comments.map(a => a.body))
             this._$container.appendChild(oPost.renderPostInfo(oAuthor, this.oModel.oData.ui.selectedPost))
-            //this._$container.appendChild(oCommentsList.renderList(comments.map(a => a.body)))
-            this._$container.appendChild(oCommentsList.renderList(comments))
+            //this._$container.appendChild(oCommentsList.renderList(aComments.map(a => a.body)))
+            this._$container.appendChild(oCommentsList.renderList(aComments))
 
             var buttonMoreComments = document.createElement("button");
 
