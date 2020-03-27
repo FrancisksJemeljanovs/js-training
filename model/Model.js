@@ -8,7 +8,8 @@ class Model {
                 postLimit: 15,
                 selectedPost: null,
                 commentsPage: 1,
-                commentsLimit: 3
+                commentsLimit: 3,
+                selectedAlbum: null
             }
         }
     }
@@ -27,11 +28,10 @@ class Model {
         document.dispatchEvent(event);
     }
 
-    addDataToProperty(sPath, oValue) {
+    addPostsDataToProperty(sPath, oValue) {
         if (this.oData[sPath] === undefined) {
             this.oData[sPath] = oValue
             console.log(`${sPath} property was created and populated with first batch of posts`)
-
         } else {
             for (let post in oValue) {
                 if (!(this.oData[sPath].some(e => e.id === oValue[post].id))) {
@@ -48,6 +48,34 @@ class Model {
         document.dispatchEvent(event);
     }
 
+    addPhotosDataToProperty(oValue) {
+        var event = new Event('model_updated');
+        if (this.oData.photos == undefined) {
+            this.oData.photos = oValue
+            console.log(`Photos property was created and populated with first batch of photos`)
+            // Dispatch the event.
+            document.dispatchEvent(event);
+        } else {
+            for (let photo in oValue) {
+                if (!(this.oData.photos.some(e => e.id === oValue[photo].id))) {
+                    this.oData.photos.push(oValue[photo])
+                } else {
+                    console.log('photo already in data model')
+                }
+            }
+            // Dispatch the event.
+            document.dispatchEvent(event);
+        }
+    }
+
+    addTodo(oTodo) {
+        this.oData.todos.push(oTodo)
+
+        var event = new Event('model_updated');
+        // Dispatch the event.
+        document.dispatchEvent(event);
+    }
+
     getData() {
         return this.oData;
     }
@@ -58,6 +86,20 @@ class Model {
 
     getTodos(nUserId) {
         return this.oData.todos.filter((todo) => todo.userId === nUserId)
+    }
+
+    deleteTodo(nTodoId) {
+        console.log(`Deleting todo No. ${nTodoId} from model`)
+        
+        //console.log(this.oModel.oData.todos)
+        //console.log(this.oData.todos)
+        this.oModel.oData.todos = this.oModel.oData.todos.filter(function(el) {
+            return el.id !== nTodoId
+        })
+        
+        var event = new Event('model_updated');
+        // Dispatch the event.
+        document.dispatchEvent(event);
     }
 
     getSmarterUsersCustomData(sPath, sSelectedColumnName) {
@@ -140,7 +182,15 @@ class Model {
         }
     }
 
-    GetPostComments() {
+    getAlbumPhotos() {
+        if (this.oData.photos !== undefined) {
+            return this.oData.photos.filter((photo) => photo.albumId == this.oData.ui.selectedAlbum.id)
+        } else {
+            return undefined
+        }
+    }
+
+    getPostComments() {
         var startCommentIndex = this.oData.ui.commentsPage * this.oData.ui.commentsLimit - this.oData.ui.commentsLimit
         var endCommentIndex = this.oData.ui.commentsPage * this.oData.ui.commentsLimit
         console.log('start and end comment indices are:')

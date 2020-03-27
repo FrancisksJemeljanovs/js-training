@@ -17,7 +17,10 @@ class PostsListComponent {
             listItem.appendChild(postTitle)
             listItem.appendChild(postBody)
             //listItem.setAttribute('data-target', oItem.id);
-            listItem.addEventListener('click', function() {fnPostClickCallback(oItem)});
+            listItem.addEventListener('click', function() {
+                history.pushState('post', `Post`, `./posts/${oItem.id}`)
+                fnPostClickCallback(oItem)
+            });
 
             //listItem.innerText = oItem.title;
             //listItem.innerText = oItem.body;

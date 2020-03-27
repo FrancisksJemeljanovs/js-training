@@ -9,18 +9,25 @@ class MainController {
         this.attachModelUpdateListener();
         this._$container = document.getElementById("app");
         document.getElementById("navUsers").addEventListener('click', function() {
+            history.pushState('users', `Users`, `./users`)
             this.openUsersPage();
         }.bind(this));
         document.getElementById("navPosts").addEventListener('click', function() {
+            history.pushState('posts', `Posts`, `./posts`)
             this.openPostsPage();
         }.bind(this));
         document.getElementById("navAlbums").addEventListener('click', function() {
+            history.pushState('albums', `Albums`, `./albums`)
             this.openAlbumsPage();
         }.bind(this));
         document.getElementById("toDoList").addEventListener('click', function() {
+            history.pushState('todos', `Todos`, `./todos`)
             this.openTodosPage();
         }.bind(this));
     }
+
+    
+
 
     openTodosPage() {
         console.log('todos page opened')
@@ -30,6 +37,16 @@ class MainController {
         } else {
             this.updatePage()
         }
+    }
+
+
+
+    addTodo(oTodo) {
+        let largestTodoId = Math.max.apply(Math, this.oModel.oData.todos.map(function(o) {return o.id}))
+        //console.log(Math.max.apply(Math, this.oModel.oData.todos.map(function(o) {return o.id})))
+        oTodo.id = largestTodoId + 1
+        //console.log(oTodo)
+        this.oRESTApiCommunicationHandler.postTodo(oTodo, this.oModel.addTodo.bind(this.oModel))
     }
 
     openUsersPage() {
@@ -55,7 +72,7 @@ class MainController {
             this.oModel.oData.ui.page = 'posts'
             this.updatePage()
         } else {
-            this.oRESTApiCommunicationHandler.getBatchOfPosts(postsStart, postsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'posts'));
+            this.oRESTApiCommunicationHandler.getBatchOfPosts(postsStart, postsLimit, this.oModel.addPostsDataToProperty.bind(this.oModel, 'posts'));
             this.oModel.oData.ui.page = 'posts'
             this.updatePage()
         }
@@ -67,11 +84,11 @@ class MainController {
         let nCommentsLimit = this.oModel.oData.ui.commentsLimit
         //console.log('comment start and limit')
         //console.log(nCommentsStart, nCommentsLimit)
-        //console.log(this.oModel.GetPostComments())
+        //console.log(this.oModel.getPostComments())
         //console.log(this.oModel.oData.comments)
 
-        if (this.oModel.GetPostComments() === undefined || this.oModel.GetPostComments().length < this.oModel.oData.ui.commentsLimit * this.oModel.oData.ui.commentsPage) {
-            this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'comments'));
+        if (this.oModel.getPostComments() === undefined || this.oModel.getPostComments().length < this.oModel.oData.ui.commentsLimit * this.oModel.oData.ui.commentsPage) {
+            this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addPostsDataToProperty.bind(this.oModel, 'comments'));
             this.oModel.oData.ui.page = 'selected-post';
             this.updatePage()
         } else {
@@ -80,8 +97,8 @@ class MainController {
             this.updatePage()
         }
 
-        //this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addDataToProperty.bind(this.oModel, 'comments'));
-        //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost.id, this.oModel.addDataToProperty.bind(this.oModel, 'comments'))
+        //this.oRESTApiCommunicationHandler.getBatchOfCommentsForPost(this.oModel.oData.ui.selectedPost.id, nCommentsStart, nCommentsLimit, this.oModel.addPostsDataToProperty.bind(this.oModel, 'comments'));
+        //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost.id, this.oModel.addPostsDataToProperty.bind(this.oModel, 'comments'))
 
         //this.oRESTApiCommunicationHandler.getCommentsForPost(this.oModel.oData.ui.selectedPost);
         //console.log(this.oModel.oData.comments)
@@ -104,11 +121,15 @@ class MainController {
         //this.oRESTApiCommunicationHandler.getAlbums(this.oModel.setProperty.bind(this.oModel, 'albums'));
     }
 
-    openPhotosPage(nAlbumId) {
-
+    openPhotosPage() {
+        //console.log(this.oModel.oData.ui.selectedAlbum)
+        var oSelectedAlbum = this.oModel.oData.ui.selectedAlbum
         console.log('photos page opened')
-        this.oRESTApiCommunicationHandler.getPhotos(nAlbumId, this.oModel.setProperty.bind(this.oModel, 'photos'));
         this.oModel.oData.ui.page = 'photos'
+        if (this.oModel.getAlbumPhotos() === undefined || this.oModel.getAlbumPhotos().length === 0) {
+            this.oRESTApiCommunicationHandler.getPhotos(oSelectedAlbum.id, this.oModel.addPhotosDataToProperty.bind(this.oModel));
+        }
+        this.updatePage()
     }
 
     attachModelUpdateListener() {
@@ -119,6 +140,7 @@ class MainController {
     }
 
     _onPostClick(oPostObject) {
+        //console.log(oPostObject)
         this.oModel.oData.ui.commentsPage = 1;
         this.oModel.oData.ui.selectedPost = oPostObject;
         //console.log(this.oModel.oData.ui.selectedPost)
@@ -126,10 +148,11 @@ class MainController {
         
     }
 
-    _onAlbumOpen(e) {
-        //console.log(MouseEvent)
-        var selectedAlbumId = e.srcElement.dataset.target;
-        this.openPhotosPage(selectedAlbumId);
+    _onAlbumOpen(oAlbumObject) {
+        console.log(oAlbumObject)
+        this.oModel.oData.ui.selectedAlbum = oAlbumObject
+
+        this.openPhotosPage();
         // open modal (popup) or page with specific album content
         //this.openPhotosPage(sAlbumId)
     }
@@ -155,29 +178,35 @@ class MainController {
         //this.updatePage()
         this.oRESTApiCommunicationHandler.updateTodo(oTodoObject)
         //this.oRESTApiCommunicationHandler.updateTodo2(oTodoObject)
-        this.oRESTApiCommunicationHandler.deleteTodo(oTodoObject)
-        this.oRESTApiCommunicationHandler.postTodo()
+        //this.oRESTApiCommunicationHandler.postTodo()
     }
 
     _onTodoDeleteButtonClick(oTodoObject) {
-        console.log('delete callback was called')
-        console.log(`${oTodoObject.id} needs to be deleted!`)
+        console.log('delete request was called with callback to delete from model function')
+        this.oRESTApiCommunicationHandler.deleteTodo(oTodoObject.id, this.oModel.deleteTodo.bind(this))
+
+        //this.oModel.oData.todos = this.oModel.oData.todos.filter(function(el) { return el.id !== oTodoObject.id; });
+
     }
 
     updatePage() {
+        console.log('page was updated')
         if (this.oModel.oData.ui.page === 'todos') {
             this._$container.innerHTML = '';
             var oTodosList = new ToDoListComponent();
+            var linebreak = document.createElement("br")
+            //var oList = new ListComponent();
+            var oAddTodo = new AddTodoComponent();
 
-            //console.log(this.oModel.oData.todos.filter((todo) => todo.userId === 1))
             for (var i in this.oModel.oData.users) {
                 var userTodos = document.createElement('div')
                 var userLabel = document.createElement('label')
                 userLabel.innerHTML = `Todos for user ${this.oModel.oData.users[i].id}`
                 userTodos.appendChild(userLabel)
-                //console.log(this.oModel.oData.users[i].id)
+                userTodos.appendChild(oAddTodo.renderAddTodoFields(this.oModel.oData.users[i], this.addTodo.bind(this)))
                 //console.log(this.oModel.oData.todos.filter((todo) => todo.userId === this.oModel.oData.users[i].id))
                 userTodos.appendChild(oTodosList.renderToDoList(this.oModel.getTodos(this.oModel.oData.users[i].id), this._onTodoCheckboxChange.bind(this), this._onTodoDeleteButtonClick.bind(this)));
+
                 this._$container.appendChild(userTodos)
             }
         }
@@ -244,7 +273,7 @@ class MainController {
             var oCommentsList = new ListComponent()
             //console.log(oAuthor)
             //console.log(this.oModel.oData.ui.selectedPost)
-            var aComments = this.oModel.GetPostComments()
+            var aComments = this.oModel.getPostComments()
             //console.log(comments.map(a => a.body))
             this._$container.appendChild(oPost.renderPostInfo(oAuthor, this.oModel.oData.ui.selectedPost))
             //this._$container.appendChild(oCommentsList.renderList(aComments.map(a => a.body)))
@@ -266,6 +295,5 @@ class MainController {
         // create instance of appropriate ui component
         // put ui component html dom to app so page is rendered with correct data and correct ui component
     }
-
 
 }

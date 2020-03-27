@@ -2,7 +2,6 @@ class ToDoListComponent {
     constructor() {}
 
     renderToDoList(aItems, fnCheckBoxChangeCallback, fnDeleteButtonClickCallback) {
-        var listItem;
         this.oDomRef = document.createElement("ul");
         aItems.forEach(function(oItem) {
             let newCheckbox = document.createElement("input");
@@ -21,7 +20,7 @@ class ToDoListComponent {
                 fnDeleteButtonClickCallback(oItem)
             })
 
-            listItem = document.createElement("li");
+            let listItem = document.createElement("li");
             listItem.innerText = oItem.id + ' ' + oItem.title;
             listItem.append(newCheckbox)
             listItem.append(newDeleteButton)

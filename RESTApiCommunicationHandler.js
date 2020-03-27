@@ -1,14 +1,36 @@
 class RESTApiCommunicationHandler {
     constructor() {}
 
+    deleteTodo(oTodo, fnCallback) {
+
+        console.log(`Sending delete request for ${oTodo} todo`)
+        fetch(`https://jsonplaceholder.typicode.com/todos/${oTodo.id}`, {
+            method: 'DELETE'
+        })
+        .then((response) => {
+            console.log(`Todo delete request response was ${response.status}`)
+            //console.log(response)
+            response.json()
+        })
+        //.then(json => console.log(json))
+        .then(function() {
+            fnCallback(oTodo)
+        })
+        .catch( err =>{
+            console.log("ERROR on deleting todo data", err)
+        })
+    }
+
     getUsers(fnCallback) {
         console.log('fetching users')
         fetch('https://jsonplaceholder.typicode.com/users').then(function(res) {
             if (!res.ok) {
                 throw new Error('Network response was not ok!')
             }
+
             console.log(`response status was ${res.status}`)
-            res.json().then(function(data) {
+            res.json()
+            .then(function(data) {
                 fnCallback(data);
                 
             })
@@ -137,31 +159,14 @@ class RESTApiCommunicationHandler {
         })
     }
 
-    deleteTodo(oTodo) {
 
-        console.log(`trying to delete ${oTodo.id} todo`)
-        fetch(`https://jsonplaceholder.typicode.com/todos/${oTodo.id}`, {
-            method: 'DELETE'
-        })
-        .then((response) => {
-            console.log(`Todo delete request response was ${response.status}`)
-            response.json()
-        })
-        .then(json => console.log(json))
-        .catch( err =>{
-            console.log("ERROR on deleting todo data", err)
-        })
-    }
 
-    postTodo() {
-        console.log('postTodo was called')
+    postTodo(oTodo,fnCallback) {
+        console.log('postTodo RESTApi handler was called')
+        //console.log(oTodo)
         fetch('https://jsonplaceholder.typicode.com/todos', {
             method: 'POST',
-            body: JSON.stringify({
-                userId: 1,
-                title: "clean room",
-                completed: false
-            }),
+            body: JSON.stringify(oTodo),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
             }
@@ -172,7 +177,10 @@ class RESTApiCommunicationHandler {
             }
             response.json()
         })
-        .then(json => console.log(json))
+        .then(function(json) {
+            console.log(json)
+            fnCallback(oTodo)
+        })
         .catch( res => {
             console.log(res)
         })
