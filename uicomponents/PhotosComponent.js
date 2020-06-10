@@ -1,4 +1,4 @@
-class PhotosComponent {
+export class PhotosComponent {
     constructor() {}
 
     renderImageGrid(oItems) {

@@ -1,4 +1,13 @@
-class MainController {
+import { AlbumsComponent } from '../uicomponents/AlbumsComponent.js'
+import { CommentsComponent } from '../uicomponents/ComentsComponent.js'
+import { ListComponent } from '../uicomponents/ListComponent.js'
+import { PhotosComponent } from '../uicomponents/PhotosComponent.js'
+import { PostsComponent } from '../uicomponents/PostsComponent.js'
+import { TableComponent } from '../uicomponents/TableComponent.js'
+import { TodoComponent } from '../uicomponents/TodoComponent.js'
+
+
+export class MainController {
     constructor(oModel, oRESTApiCommunicationHandler) {
         this.oModel = oModel;
         this.oRESTApiCommunicationHandler = oRESTApiCommunicationHandler;
@@ -191,27 +200,27 @@ class MainController {
       console.log('page was updated')
       if (this.oModel.oData.ui.page === 'todos') {
         this._$container.innerHTML = '';
-        var oTodosList = new ToDoListComponent();
-        var linebreak = document.createElement("br")
-        //var oList = new ListComponent();
-        var oAddTodo = new AddTodoComponent();
+        var oTodos = new TodoComponent();
+        //var linebreak = document.createElement("br")
+
 
         for (var i in this.oModel.oData.users) {
           var userTodos = document.createElement('div')
           var userLabel = document.createElement('label')
           userLabel.innerHTML = `Todos for user ${this.oModel.oData.users[i].id}`
-          userTodos.appendChild(userLabel)
-          userTodos.appendChild(oAddTodo.renderAddTodoFields(this.oModel.oData.users[i], this.addTodo.bind(this)))
-          //console.log(this.oModel.oData.todos.filter((todo) => todo.userId === this.oModel.oData.users[i].id))
-          userTodos.appendChild(oTodosList.renderToDoList(this.oModel.getTodos(this.oModel.oData.users[i].id), this._onTodoCheckboxChange.bind(this), this._onTodoDeleteButtonClick.bind(this)));
-
+          
+          let addTodoComponent = oTodos.renderAddTodoComponent(this.oModel.oData.users[i], this.addTodo.bind(this))
+          let todoList = oTodos.renderTodoComponent(this.oModel.getTodos(this.oModel.oData.users[i].id), this._onTodoCheckboxChange.bind(this), this._onTodoDeleteButtonClick.bind(this))
+          let oListComponent = new ListComponent()
+          let todosList = oListComponent.renderList(todoList)
+          userTodos.appendChild(addTodoComponent)
+          userTodos.appendChild(todosList)
           this._$container.appendChild(userTodos)
         }
       }
 
       if (this.oModel.oData.ui.page === 'users') {
         this._$container.innerHTML = '';
-        //var oList = new ListComponent();
         var oTable = new TableComponent();
         //this._$container.appendChild(oList.renderTable(this.oModel.getProperty('users')));
         this._$container.appendChild(oTable.renderTable(this.oModel.getSmarterUsersCustomData('users'), this._onColumnNameClick.bind(this)));
@@ -219,8 +228,15 @@ class MainController {
 
       if (this.oModel.oData.ui.page === 'posts') {
         this._$container.innerHTML = ''
-        var oList = new PostsListComponent();
-        this._$container.appendChild(oList.renderList(this.oModel.getPostsInPage(), this._onPostClick.bind(this)));
+        let oPostComponent = new PostsComponent();
+        let oListComponent = new ListComponent()
+        //this._$container.appendChild(oPostList.renderList(this.oModel.getPostsInPage(), this._onPostClick.bind(this)));
+
+        let oPostItems = oPostComponent.renderPosts(this.oModel.getPostsInPage(), this._onPostClick.bind(this))
+        let postList = oListComponent.renderList(oPostItems)
+        this._$container.appendChild(postList)
+
+  
 
         var buttonPrevious = document.createElement("button");
         var buttonNext = document.createElement("button");
@@ -266,16 +282,16 @@ class MainController {
 
       if (this.oModel.oData.ui.page === 'selected-post') {
         this._$container.innerHTML = ''
-        var oPost = new PostInfoComponent();
+        let oPostComponent = new PostsComponent();
         var oAuthor = this.oModel.getUserInfoFromPost(this.oModel.oData.selectedPost)
-        var oCommentsList = new ListComponent()
-        //console.log(oAuthor)
-        //console.log(this.oModel.oData.ui.selectedPost)
-        var aComments = this.oModel.getPostComments()
-        //console.log(comments.map(a => a.body))
-        this._$container.appendChild(oPost.renderPostInfo(oAuthor, this.oModel.oData.ui.selectedPost))
-        //this._$container.appendChild(oCommentsList.renderList(aComments.map(a => a.body)))
-        this._$container.appendChild(oCommentsList.renderList(aComments))
+
+        this._$container.appendChild(oPostComponent.renderPostInfo(oAuthor, this.oModel.oData.ui.selectedPost))
+
+        var oComments = new CommentsComponent()
+        let oListComponent = new ListComponent()
+        let commentArray = oComments.renderComments(this.oModel.getPostComments())
+        let commentList = oListComponent.renderList(commentArray)
+        this._$container.appendChild(commentList)
 
         var buttonMoreComments = document.createElement("button");
 

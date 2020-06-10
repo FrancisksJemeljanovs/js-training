@@ -1,4 +1,4 @@
-class AlbumsComponent {
+export class AlbumsComponent {
     constructor() {}
 
     renderList(aItems, fnItemClickCallback) {

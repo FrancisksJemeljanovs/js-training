@@ -1,4 +1,4 @@
-class TableComponent {
+export class TableComponent {
     constructor() {}
 
     renderTable(aItems, fnColumnNameClickCallback) {

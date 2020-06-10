@@ -1,3 +1,7 @@
+import { Model } from './model/Model.js'
+import { RESTApiCommunicationHandler } from './RESTApiCommunicationHandler.js'
+import { MainController } from './controller/MainController.js'
+
 window.myapp = {};
 window.addEventListener('load', function() {
     var oModel = new Model();

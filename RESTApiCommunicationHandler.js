@@ -1,4 +1,4 @@
-class RESTApiCommunicationHandler {
+export class RESTApiCommunicationHandler {
     constructor() {}
 
     deleteTodo(oTodo, fnCallback) {

@@ -1,15 +1,15 @@
-class ListComponent {
-    constructor() {}
+export class ListComponent {
+  constructor() {}
 
-    renderList(aItems) {
-        var listItem;
-        this.oDomRef = document.createElement("ul");
-        aItems.forEach(function(oItem) {
-            //console.log(oItem)
-            listItem = document.createElement("li");
-            listItem.innerText = oItem.id + ' ' + oItem.body;
-            this.oDomRef.appendChild(listItem);
-        }.bind(this));
-        return this.oDomRef;
-    }
+  renderList(oItems) {
+      var listItem;
+      this.oDomRef = document.createElement("ul");
+      oItems.forEach(function(item) {
+          //console.log(oItem)
+          listItem = document.createElement("li");
+          listItem.appendChild(item);
+          this.oDomRef.appendChild(listItem);
+      }.bind(this));
+      return this.oDomRef;
+  }
 }

@@ -1,4 +1,4 @@
-class Model {
+export class Model {
   constructor() {
     this.oData = {
       ui: {
@@ -191,7 +191,7 @@ class Model {
     getPostComments() {
       var startCommentIndex = this.oData.ui.commentsPage * this.oData.ui.commentsLimit - this.oData.ui.commentsLimit
       var endCommentIndex = this.oData.ui.commentsPage * this.oData.ui.commentsLimit
-      console.log('start and end comment indices are:')
+      //console.log('start and end comment indices are:')
       //console.log(startCommentIndex, endCommentIndex)
       if (this.oData.comments !== undefined) {
         return this.oData.comments.filter((comment) => comment.postId == this.oData.ui.selectedPost.id)
